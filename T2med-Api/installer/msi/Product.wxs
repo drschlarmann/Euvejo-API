@@ -1,0 +1,189 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package
+    Name="Euvejo-API"
+    Manufacturer="Euvejo"
+    Version="1.0.15"
+    UpgradeCode="3afaba39-a98a-4a77-8a33-4683fbfde36a"
+    Scope="perMachine">
+
+    <MajorUpgrade Schedule="afterInstallExecute" DowngradeErrorMessage="Eine neuere Version von Euvejo-API ist bereits installiert." />
+    <MediaTemplate EmbedCab="yes" />
+    <Property Id="T2MEDINSTALLDIR" Value="D:\t2med" />
+    <Property Id="T2MEDAPIPASSWORD" Hidden="yes" Secure="yes" />
+    <Property Id="T2MEDAPIPASSWORDCONFIRM" Hidden="yes" Secure="yes" />
+    <Property Id="SKIPSTARTSERVICE" Secure="yes" />
+
+    <Feature Id="MainFeature" Title="Euvejo-API" Level="1">
+      <ComponentGroupRef Id="T2medApiComponents" />
+    </Feature>
+
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+    <CustomAction
+      Id="AskT2medInstallDir"
+      Script="vbscript"
+      ScriptSourceFile="msi\AskT2medInstallDir.vbs"
+      Execute="immediate" />
+    <CustomAction
+      Id="ConfigureT2medApi"
+      FileRef="fil_MsiActionsExe"
+      ExeCommand="configure &quot;[INSTALLFOLDER]appsettings.json&quot; &quot;[T2MEDINSTALLDIR]&quot; &quot;[T2MEDAPIPASSWORD]&quot;"
+      Execute="deferred"
+      Impersonate="no"
+      HideTarget="yes"
+      Return="check" />
+    <CustomAction
+      Id="StartT2medApiService"
+      FileRef="fil_MsiActionsExe"
+      ExeCommand="start-service euvejo-api"
+      Execute="deferred"
+      Impersonate="no"
+      Return="check" />
+    <CustomAction
+      Id="ShowInstallCompleteMessage"
+      Script="vbscript"
+      ScriptSourceFile="msi\ShowInstallCompleteMessage.vbs"
+      Execute="immediate" />
+
+    <InstallUISequence>
+      <Custom Action="AskT2medInstallDir" Before="ExecuteAction" Condition="NOT Installed AND UILevel &gt; 2" />
+      <Show Dialog="ApiPasswordDlg" After="AskT2medInstallDir" Condition="NOT Installed AND UILevel &gt; 2" />
+    </InstallUISequence>
+    <InstallExecuteSequence>
+      <Custom Action="ConfigureT2medApi" After="InstallFiles" Condition="NOT Installed" />
+      <Custom Action="StartT2medApiService" After="InstallServices" Condition="NOT Installed AND NOT SKIPSTARTSERVICE" />
+      <Custom Action="ShowInstallCompleteMessage" After="InstallFinalize" Condition="NOT Installed AND UILevel &gt; 2" />
+    </InstallExecuteSequence>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="euvejo-api" />
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
+
+    <UI>
+      <Dialog Id="ApiPasswordDlg" Width="430" Height="240" Title="Euvejo-API Kennwort">
+        <Control Id="Title" Type="Text" X="20" Y="15" Width="390" Height="25" Transparent="yes" NoPrefix="yes"
+                 Text="API-Kennwort festlegen" />
+        <Control Id="Description" Type="Text" X="20" Y="45" Width="390" Height="45" Transparent="yes" NoPrefix="yes"
+                 Text="Das Kennwort schützt alle API-Endpunkte. Verwenden Sie 6 bis 256 Zeichen und tragen Sie dasselbe Kennwort später im Euvejo-Client ein." />
+        <Control Id="PasswordLabel" Type="Text" X="20" Y="102" Width="140" Height="18" Text="API-Kennwort:" />
+        <Control Id="PasswordEdit" Type="Edit" X="165" Y="99" Width="245" Height="22" Property="T2MEDAPIPASSWORD" Password="yes" />
+        <Control Id="ConfirmationLabel" Type="Text" X="20" Y="136" Width="140" Height="18" Text="Kennwort bestätigen:" />
+        <Control Id="ConfirmationEdit" Type="Edit" X="165" Y="133" Width="245" Height="22" Property="T2MEDAPIPASSWORDCONFIRM" Password="yes" />
+        <Control Id="Separator" Type="Line" X="0" Y="191" Width="430" Height="0" />
+        <Control Id="Next" Type="PushButton" X="288" Y="204" Width="66" Height="24" Default="yes" Text="Weiter">
+          <Publish Event="SpawnDialog" Value="ApiPasswordErrorDlg" Condition="T2MEDAPIPASSWORD = &quot;&quot; OR T2MEDAPIPASSWORD &lt;&gt; T2MEDAPIPASSWORDCONFIRM" />
+          <Publish Event="EndDialog" Value="Return" Condition="T2MEDAPIPASSWORD &lt;&gt; &quot;&quot; AND T2MEDAPIPASSWORD = T2MEDAPIPASSWORDCONFIRM" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="362" Y="204" Width="56" Height="24" Cancel="yes" Text="Abbrechen">
+          <Publish Event="EndDialog" Value="Exit" />
+        </Control>
+      </Dialog>
+
+      <Dialog Id="ApiPasswordErrorDlg" Width="300" Height="120" Title="Euvejo-API Kennwort">
+        <Control Id="Message" Type="Text" X="20" Y="18" Width="260" Height="50" Transparent="yes" NoPrefix="yes"
+                 Text="Bitte geben Sie ein Kennwort mit 6 bis 256 Zeichen zweimal identisch ein." />
+        <Control Id="Ok" Type="PushButton" X="122" Y="82" Width="56" Height="22" Default="yes" Cancel="yes" Text="OK">
+          <Publish Event="EndDialog" Value="Return" />
+        </Control>
+      </Dialog>
+    </UI>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="T2medApiComponents" Directory="INSTALLFOLDER">
+      <Component Id="cmp_LegacyT2medApiService" Guid="*" Bitness="always64">
+        <ServiceControl Id="svcctl_LegacyT2medApi" Name="T2med-Api" Stop="install" Wait="yes" />
+        <RegistryValue Root="HKLM" Key="Software\Euvejo\Euvejo-API" Name="LegacyServiceMigration" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+
+      <Component Id="cmp_T2medApiExe" Guid="*" Bitness="always64">
+        <File Id="fil_T2medApiExe" Source="payload\Euvejo-Api.exe" KeyPath="yes" />
+        <ServiceInstall
+          Id="svc_T2medApi"
+          Type="ownProcess"
+          Name="euvejo-api"
+          DisplayName="Euvejo-API"
+          Description="Lokale Euvejo-API fuer Euvejo"
+          Start="auto"
+          ErrorControl="normal"
+          Account="LocalSystem" />
+        <ServiceControl
+          Id="svcctl_T2medApi"
+          Name="euvejo-api"
+          Stop="both"
+          Remove="uninstall"
+          Wait="yes" />
+      </Component>
+
+      <Component Id="cmp_AppSettings" Guid="*" Bitness="always64" NeverOverwrite="yes" Permanent="yes">
+        <File Id="fil_AppSettings" Source="payload\appsettings.json" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_AppSettingsDevelopment" Guid="*" Bitness="always64" NeverOverwrite="yes">
+        <File Id="fil_AppSettingsDevelopment" Source="payload\appsettings.Development.json" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_ApiStaticWebAssets" Guid="*" Bitness="always64">
+        <File Id="fil_ApiStaticWebAssets" Source="payload\Euvejo-Api.staticwebassets.endpoints.json" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_ApiWebConfig" Guid="*" Bitness="always64">
+        <File Id="fil_ApiWebConfig" Source="payload\web.config" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_ApiPdb" Guid="*" Bitness="always64">
+        <File Id="fil_ApiPdb" Source="payload\Euvejo-Api.pdb" KeyPath="yes" />
+      </Component>
+
+      <Component Id="cmp_T2medApiTestExe" Guid="*" Bitness="always64">
+        <File Id="fil_T2medApiTestExe" Source="payload\Euvejo-Api-Test.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_T2medApiTestPdb" Guid="*" Bitness="always64">
+        <File Id="fil_T2medApiTestPdb" Source="payload\Euvejo-Api-Test.pdb" KeyPath="yes" />
+      </Component>
+
+      <Component Id="cmp_T2medApiConfigExe" Guid="*" Bitness="always64">
+        <File Id="fil_T2medApiConfigExe" Source="payload\Euvejo-Api-Config.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_T2medApiConfigPdb" Guid="*" Bitness="always64">
+        <File Id="fil_T2medApiConfigPdb" Source="payload\Euvejo-Api-Config.pdb" KeyPath="yes" />
+      </Component>
+
+      <Component Id="cmp_MsiActionsExe" Guid="*" Bitness="always64">
+        <File Id="fil_MsiActionsExe" Source="payload\Euvejo-Api-MsiActions.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_MsiActionsPdb" Guid="*" Bitness="always64">
+        <File Id="fil_MsiActionsPdb" Source="payload\Euvejo-Api-MsiActions.pdb" KeyPath="yes" />
+      </Component>
+
+      <Component Id="cmp_T2medApiTestDesktopShortcut" Directory="DesktopFolder" Guid="*">
+        <Shortcut
+          Id="sc_T2medApiTest"
+          Name="Euvejo-API Test"
+          Description="Euvejo-API Test starten"
+          Target="[INSTALLFOLDER]Euvejo-Api-Test.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue
+          Root="HKCU"
+          Key="Software\Euvejo\Euvejo-API"
+          Name="T2medApiTestDesktopShortcut"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+      </Component>
+      <Component Id="cmp_T2medApiConfigDesktopShortcut" Directory="DesktopFolder" Guid="*">
+        <Shortcut
+          Id="sc_T2medApiConfig"
+          Name="Euvejo-API Konfiguration"
+          Description="Verschluesselte Euvejo-API-Konfiguration bearbeiten"
+          Target="[INSTALLFOLDER]Euvejo-Api-Config.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue
+          Root="HKCU"
+          Key="Software\Euvejo\Euvejo-API"
+          Name="T2medApiConfigDesktopShortcut"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
