@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../T2med-Api/HttpsCertificate.cs" Link="HttpsCertificate.cs" />
+    <Compile Include="../T2med-Api/HttpsCertificateProvider.cs" Link="HttpsCertificateProvider.cs" />
+    <Compile Include="../T2med-Api/HttpsHosting.cs" Link="HttpsHosting.cs" />
+  </ItemGroup>
+</Project>
