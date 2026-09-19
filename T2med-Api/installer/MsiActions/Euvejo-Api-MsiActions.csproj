@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>T2med_Api_MsiActions</RootNamespace>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Euvejo-Api-MsiActions</AssemblyName>
+    <Product>Euvejo-API Installationshilfe</Product>
+    <Version>1.0.13</Version>
+    <AssemblyVersion>1.0.13.0</AssemblyVersion>
+    <FileVersion>1.0.13.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../HttpsCertificate.cs" Link="HttpsCertificate.cs" />
+    <Compile Include="../../SecureConfiguration.cs" Link="SecureConfiguration.cs" />
+    <Compile Include="../../ApiPasswordSecurity.cs" Link="ApiPasswordSecurity.cs" />
+  </ItemGroup>
+</Project>
