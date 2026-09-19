@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Euvejo-Api-Config</AssemblyName>
+    <Product>Euvejo-API Konfiguration</Product>
+    <RootNamespace>T2med_Api_Config</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\T2med-Api\SecureConfiguration.cs" Link="SecureConfiguration.cs" />
+    <Compile Include="..\T2med-Api\ApiPasswordSecurity.cs" Link="ApiPasswordSecurity.cs" />
+    <InternalsVisibleTo Include="T2med-Api.ConfigTests" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+
+</Project>
